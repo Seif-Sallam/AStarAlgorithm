@@ -2,7 +2,7 @@
 
 int main()
 {
-	Demonstration d(800,600);
+	Demonstration d(800, 650);
 	d.Run();
 	return 0;
 }

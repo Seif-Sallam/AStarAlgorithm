@@ -4,82 +4,17 @@ Demonstration::Demonstration(uint32_t sWidth, uint32_t sHeight)
 {
 	m_window = new sf::RenderWindow(sf::VideoMode(sWidth, sHeight), "A Star Algorithm Demo", sf::Style::Titlebar);
 	m_event = new sf::Event;
-	
+	ImGui::SFML::Init(*m_window);
 	bool diagonal = true;
 	m_graph = new Graph(diagonal);
-	m_fCellSize = { 32.0f,32.0f };
-	m_fTileSize = { 20.0f, 20.0f };
-	m_fOffset = { 16.0f, 16.0f };
+	m_fCellSize = {32.0f, 32.0f};
+	m_fTileSize = {20.0f, 20.0f};
+	m_fOffset = {16.0f, 16.0f};
+	m_nodesShapes = nullptr;
+	PrepareConnections();
 
-	gWidth = m_graph->GetWidth();
-	gHeight = m_graph->GetHeight();
-	m_nodesShapes = new sf::RectangleShape[gWidth * gHeight];
-	for(int x = 0; x < gWidth; ++x)
-		for (int y = 0; y < gHeight; ++y)
-		{
-			int index = y * gWidth + x;
-			m_nodesShapes[index].setSize(m_fTileSize);
-			m_nodesShapes[index].setPosition(sf::Vector2f(x * m_fCellSize.x + m_fOffset.x, y * m_fCellSize.y + m_fOffset.y));
-		}
-
-	m_connections.setPrimitiveType(sf::Lines);
-	for (int x = 0; x < gWidth; x++)
-		for (int y = 0; y < gHeight; y++)
-		{
-			auto n = m_graph->GetANode(x, y);
-			if (n)
-			{
-				for (auto c : n->neighbours)
-				{
-					sf::Vector2f center1 = { n->x * m_fCellSize.x + m_fOffset.x + m_fCellSize.x / 4.0f,
-						n->y * m_fCellSize.y + m_fOffset.y + m_fCellSize.y / 4.0f };
-					sf::Vector2f center2 = { c->x * m_fCellSize.x + m_fOffset.x + m_fCellSize.x / 4.f,
-						c->y * m_fCellSize.y + m_fOffset.y + m_fCellSize.y / 4.f };
-
-					sf::Vertex v1;
-					v1.position = center1;
-					v1.color = sf::Color(0, 0, 255, 64);
-					sf::Vertex v2;
-					v2.position = center2;
-					v2.color = sf::Color(0, 0 ,255, 64);
-
-					m_connections.append(v1);
-					m_connections.append(v2);
-				}
-			}
-		}
 	m_view.setSize(sf::Vector2f(m_window->getSize()));
 	m_view.setCenter(sf::Vector2f(m_view.getSize().x / 2.0f, m_view.getSize().y / 2.0f));
-
-	m_font.loadFromFile("KnowingHow.ttf");
-	for (int i = 0; i < 6; i++) {
-		details[i].setFont(m_font);
-		details[i].setCharacterSize(18u);
-	}
-
-	details[0].setString("Path Blocks");
-	details[0].setFillColor(sf::Color::Yellow);
-	details[1].setString("Not Visited Blocks");
-	details[1].setFillColor(sf::Color(0, 0, 255, 200));
-	details[3].setString("Connection Lines");
-	details[3].setFillColor(sf::Color(0, 0, 255, 200));
-	details[2].setString("Visited Blocks");
-	details[2].setFillColor(sf::Color::Blue);
-	details[4].setString("Obstacles");
-	details[4].setFillColor(sf::Color(128,128,128));
-	if (diagonal)
-		details[5].setString("Diagonal movement is ON");
-	else
-		details[5].setString("Diagonal movement is OFF");
-	
-	details[5].setFillColor(sf::Color::Green);
-
-	details[0].setPosition(sf::Vector2f(550.0f, 100.0f));
-	details[2].setPosition(sf::Vector2f(550.0f, 150.0f));
-	details[1].setPosition(sf::Vector2f(550.0f, 200.0f));
-	details[3].setPosition(sf::Vector2f(550.0f, 250.0f));
-	details[4].setPosition(sf::Vector2f(550.0f, 300.0f));
-	details[5].setPosition(sf::Vector2f(550.0f, 350.0f));
 }
 
 void Demonstration::Run()
@@ -88,15 +23,16 @@ void Demonstration::Run()
 	{
 		EventHandler();
 		Update();
+		ImGuiLayer();
 		Draw();
 	}
 }
-
 
 void Demonstration::EventHandler()
 {
 	while (m_window->pollEvent(*m_event))
 	{
+		ImGui::SFML::ProcessEvent(*m_event);
 		if (m_event->type == sf::Event::Closed)
 			m_window->close();
 		if (m_event->type == sf::Event::KeyPressed && m_event->key.code == sf::Keyboard::Escape)
@@ -112,19 +48,22 @@ void Demonstration::EventHandler()
 				if (y >= 0 && y < gHeight)
 				{
 					int index = y * gWidth + x;
-					if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl)) {
-						if(m_graph->GetANode(x, y) != m_graph->nodeEnd)
+					if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl))
+					{
+						if (m_graph->GetANode(x, y) != m_graph->nodeEnd)
 							m_graph->nodeStart = m_graph->GetANode(x, y);
 					}
-					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift)) {
-						if(m_graph->GetANode(x, y) != m_graph->nodeStart)
+					else if (sf::Keyboard::isKeyPressed(sf::Keyboard::LShift))
+					{
+						if (m_graph->GetANode(x, y) != m_graph->nodeStart)
 							m_graph->nodeEnd = m_graph->GetANode(x, y);
 					}
-					else {
+					else
+					{
 						if (m_graph->GetANode(x, y) != m_graph->nodeEnd && m_graph->GetANode(x, y) != m_graph->nodeStart)
 						{
 							auto node = m_graph->GetANode(x, y);
-							if (node) 
+							if (node)
 								node->obstacle = !node->obstacle;
 						}
 					}
@@ -134,8 +73,39 @@ void Demonstration::EventHandler()
 	}
 }
 
+void Demonstration::ImGuiLayer()
+{
+	ImGui::Begin("Simulation Settings");
+
+	ImGui::PushTextWrapPos(ImGui::GetWindowWidth());
+	ImGui::TextUnformatted("The green square represents the starting node, and the red square represents the end node."
+						   "To make the node inaccessable just click on it. To change the start node you just press Left CTRL + click on the node. To change the end node press Left SHIFT and click on the node"
+						   "Yellow nodes are the path nodes");
+	ImGui::Separator();
+	static bool isDiagonalEnabled = true;
+	static bool lastValue = true;
+	ImGui::Checkbox("Diagonal edges", &isDiagonalEnabled);
+	if (lastValue != isDiagonalEnabled)
+	{
+		m_graph->PrepareGraph(isDiagonalEnabled);
+		PrepareConnections();
+		lastValue = isDiagonalEnabled;
+	}
+	static int wh[2] = {16, 16};
+	ImGui::SliderInt2("Width and Height", wh, 10, 20);
+	if (ImGui::Button("Change"))
+	{
+		m_graph->SetWidthAndHeight(wh[0], wh[1]);
+		PrepareConnections();
+	}
+
+	ImGui::End();
+}
+
 void Demonstration::Update()
 {
+	sf::Time dt = m_clock.restart();
+	ImGui::SFML::Update(*m_window, dt);
 	for (int x = 0; x < gWidth; x++)
 	{
 		for (int y = 0; y < gHeight; y++)
@@ -159,13 +129,12 @@ void Demonstration::Update()
 			{
 				m_nodesShapes[index].setFillColor(sf::Color::Red);
 			}
-
 		}
 	}
 
 	if (m_graph->nodeEnd != nullptr)
 	{
-		Node* p = m_graph->nodeEnd;
+		Node *p = m_graph->nodeEnd;
 
 		while (p->parent != nullptr)
 		{
@@ -185,22 +154,66 @@ void Demonstration::Draw()
 
 	m_window->draw(m_connections);
 
-	for(int x = 0; x < gWidth; x++)
+	for (int x = 0; x < gWidth; x++)
 		for (int y = 0; y < gHeight; y++)
 		{
 			m_window->draw(m_nodesShapes[y * gWidth + x]);
 		}
-	for (int i = 0; i < 6; i++)
-	{
-		m_window->draw(details[i]);
-	}
 
+	ImGui::SFML::Render(*m_window);
 	m_window->display();
 }
 
 Demonstration::~Demonstration()
 {
+	ImGui::SFML::Shutdown();
 	delete m_window;
 	delete m_event;
 	delete m_graph;
+}
+
+void Demonstration::PrepareConnections()
+{
+	gWidth = m_graph->GetWidth();
+	gHeight = m_graph->GetHeight();
+	if (m_nodesShapes != nullptr)
+	{
+		delete[] m_nodesShapes;
+	}
+	m_nodesShapes = new sf::RectangleShape[gWidth * gHeight];
+	m_connections.clear();
+	for (int x = 0; x < gWidth; ++x)
+		for (int y = 0; y < gHeight; ++y)
+		{
+			int index = y * gWidth + x;
+			m_nodesShapes[index].setSize(m_fTileSize);
+			m_nodesShapes[index].setPosition(sf::Vector2f(x * m_fCellSize.x + m_fOffset.x, y * m_fCellSize.y + m_fOffset.y));
+		}
+
+	m_connections.setPrimitiveType(sf::Lines);
+	for (int x = 0; x < gWidth; x++)
+		for (int y = 0; y < gHeight; y++)
+		{
+			auto n = m_graph->GetANode(x, y);
+			if (n)
+			{
+				for (auto c : n->neighbours)
+				{
+					sf::Vector2f center1 = {n->x * m_fCellSize.x + m_fOffset.x + m_fCellSize.x / 4.0f,
+											n->y * m_fCellSize.y + m_fOffset.y + m_fCellSize.y / 4.0f};
+					sf::Vector2f center2 = {c->x * m_fCellSize.x + m_fOffset.x + m_fCellSize.x / 4.f,
+											c->y * m_fCellSize.y + m_fOffset.y + m_fCellSize.y / 4.f};
+
+					sf::Vertex v1;
+					v1.position = center1;
+					v1.color = sf::Color(0, 0, 255, 64);
+					sf::Vertex v2;
+					v2.position = center2;
+					v2.color = sf::Color(0, 0, 255, 64);
+
+					m_connections.append(v1);
+					m_connections.append(v2);
+				}
+			}
+		}
 }
