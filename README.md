@@ -11,6 +11,5 @@ Install SFML & run make at the root folder of the project. This will generate an
 
 ### Speical Thanks:
 This was mainly inspired by the One Lone Coder with the video:
-```
-https://www.youtube.com/watch?v=icZj67PTFhc&ab_channel=javidx9
-```
+
+[Path Planning - A* (A-Star)](https://www.youtube.com/watch?v=icZj67PTFhc&ab_channel=javidx9)
