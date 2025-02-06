@@ -102,16 +102,21 @@ void Demonstration::ImGuiLayer()
 						   "\n* To make the node inaccessible just click on it.\n* To change the start node you just press Left CTRL + click on the node. To change the end node press Left SHIFT and click on the node"
 						   "Yellow nodes are the path nodes");
 	ImGui::Separator();
-	static bool isDiagonalEnabled = true;
-	static bool lastValue = true;
-	ImGui::Checkbox("Diagonal edges", &isDiagonalEnabled);
-	if (lastValue != isDiagonalEnabled)
+
+	bool pressed = false;
+	pressed |= ImGui::Checkbox("Diagonal edges", &m_bDiagonalEnabled);
+	ImGui::SameLine();
+	pressed |= ImGui::Checkbox("Render edges", &m_bRenderEdges);
+
+	if (pressed)
 	{
-		m_graph->PrepareGraph(isDiagonalEnabled);
+		m_graph->PrepareGraph(m_bDiagonalEnabled);
 		PrepareConnections();
-		lastValue = isDiagonalEnabled;
 	}
-	ImGui::SliderInt2("Width and Height", mGuiGraphSize, 10, 20);
+
+	ImGui::Separator();
+
+	ImGui::SliderInt2("Grid Size", mGuiGraphSize, 10, 20);
 	if (ImGui::Button("Change"))
 	{
 		m_graph->SetWidthAndHeight(mGuiGraphSize[0], mGuiGraphSize[1]);
@@ -199,9 +204,8 @@ Demonstration::~Demonstration()
 void Demonstration::PrepareConnections()
 {
 	if (m_nodesShapes != nullptr)
-	{
 		delete[] m_nodesShapes;
-	}
+
 	m_nodesShapes = new sf::RectangleShape[m_graph->GetWidth() * m_graph->GetHeight()];
 	m_connections.clear();
 	for (int x = 0; x < m_graph->GetWidth(); ++x)
@@ -213,31 +217,37 @@ void Demonstration::PrepareConnections()
 		}
 
 	m_connections.setPrimitiveType(sf::Lines);
-	for (int x = 0; x < m_graph->GetWidth(); x++)
-		for (int y = 0; y < m_graph->GetHeight(); y++)
+	if (m_bRenderEdges)
+	{
+		for (int x = 0; x < m_graph->GetWidth(); x++)
 		{
-			auto n = m_graph->GetANode(x, y);
-			if (n)
+			for (int y = 0; y < m_graph->GetHeight(); y++)
 			{
-				for (auto c : n->neighbours)
+				auto n = m_graph->GetANode(x, y);
+				if (n)
 				{
-					sf::Vector2f center1 = {n->x * m_fCellSize.x + m_fOffset.x + m_fCellSize.x / 4.0f,
-											n->y * m_fCellSize.y + m_fOffset.y + m_fCellSize.y / 4.0f};
-					sf::Vector2f center2 = {c->x * m_fCellSize.x + m_fOffset.x + m_fCellSize.x / 4.f,
-											c->y * m_fCellSize.y + m_fOffset.y + m_fCellSize.y / 4.f};
+					for (auto c : n->neighbours)
+					{
+						sf::Vector2f center1 = {n->x * m_fCellSize.x + m_fOffset.x + m_fCellSize.x / 4.0f,
+												n->y * m_fCellSize.y + m_fOffset.y + m_fCellSize.y / 4.0f};
+						sf::Vector2f center2 = {c->x * m_fCellSize.x + m_fOffset.x + m_fCellSize.x / 4.f,
+												c->y * m_fCellSize.y + m_fOffset.y + m_fCellSize.y / 4.f};
 
-					sf::Vertex v1;
-					v1.position = center1;
-					v1.color = sf::Color(0, 0, 255, 64);
-					sf::Vertex v2;
-					v2.position = center2;
-					v2.color = sf::Color(0, 0, 255, 64);
+						sf::Vertex v1;
+						v1.position = center1;
+						v1.color = sf::Color(0, 0, 255, 64);
+						sf::Vertex v2;
+						v2.position = center2;
+						v2.color = sf::Color(0, 0, 255, 64);
 
-					m_connections.append(v1);
-					m_connections.append(v2);
+						m_connections.append(v1);
+						m_connections.append(v2);
+					}
 				}
 			}
 		}
+	}
+
 }
 
 bool Demonstration::isInBoundsOfImGui()

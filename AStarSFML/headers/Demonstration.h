@@ -39,4 +39,7 @@ private:
 	sf::VertexArray m_connections;
 
 	sf::RectangleShape m_boundingBox;
+
+	bool m_bRenderEdges;
+	bool m_bDiagonalEnabled;
 };
