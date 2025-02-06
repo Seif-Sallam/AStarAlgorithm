@@ -3,11 +3,7 @@ This project is a demonstration of the A* Algorithm with SFML used as a Graphics
 
 ## To compile the code:
 
-This project was compiled and maintained on Linux Ubuntu 21.0. The project has a Makefile that compiles all the other projects needed to run this project such as _imgui_.
-
-The required dependency is mainly [SFML](https://www.sfml-dev.org/).
-
-Install SFML & run make at the root folder of the project. This will generate an executable file in the build folder _Build_.
+This project was compiled and maintained on Windows. The project contains a CMakeLists file that can compile the project and its dependencies. Supposedly the project can run on both Windows and Linux, however, I haven't tried compiling for linux.
 
 ## Screenshot
 _With diagonal edges enabled_
@@ -15,7 +11,7 @@ _With diagonal edges enabled_
 <img src= ./Images/Screenshot1.png>
 
 
-_With diagonal edges disabeld_
+_With diagonal edges disabled_
 <img src= ./Images/Screenshot2.png>
 
 
