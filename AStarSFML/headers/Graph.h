@@ -30,8 +30,8 @@ public:
         m_iHeight = height;
         PrepareGraph(diagonalMoves);
     }
-    int GetHeight();
-    int GetWidth();
+    int GetHeight() const { return m_iHeight; }
+    int GetWidth() const { return m_iWidth; };
     void PrepareGraph(bool diagonalMoves);
 
     Node *GetANode(int x, int y);
@@ -39,6 +39,7 @@ public:
     Node *nodeStart;
     Node *nodeEnd;
 
+    ~Graph();
 private:
     int m_iHeight;
     int m_iWidth;

@@ -23,14 +23,14 @@ void Graph::Solve_AStar()
             m_nodes[index].localGoal = INFINITY;
         }
 
-    // A lamda that will calculate the distance between the nodes
+    // A lambda that will calculate the distance between the nodes
 
     auto distance = [](const Node *a, const Node *b)
     {
         return sqrtf((a->x - b->x) * (a->x - b->x) + (a->y - b->y) * (a->y - b->y));
     };
 
-    // A lamda that will calculate the heuristic distance between the node and the end node
+    // A lambda that will calculate the heuristic distance between the node and the end node
     auto heuristic = [distance](Node *a, Node *b)
     {
         return distance(a, b);
@@ -86,19 +86,9 @@ void Graph::Solve_AStar()
     }     // end of the while loop
 } // End of the Solve_AStar method
 
-int Graph::GetHeight()
-{
-    return m_iHeight;
-}
-
-int Graph::GetWidth()
-{
-    return m_iWidth;
-}
-
 Node *Graph::GetANode(int x, int y)
 {
-    // Making sure it is within the boundries before returning it
+    // Making sure it is within the boundaries before returning it
     if (x >= 0 && x <= m_iWidth - 1 && y >= 0 && y <= m_iHeight)
         return &m_nodes[y * m_iWidth + x];
     return nullptr;
@@ -107,9 +97,8 @@ Node *Graph::GetANode(int x, int y)
 void Graph::PrepareGraph(bool diagonalMoves)
 {
     if (m_nodes != nullptr)
-    {
         delete[] m_nodes;
-    }
+
     // Allocating the memory for the nodes array
     m_nodes = new Node[m_iHeight * m_iWidth];
 
@@ -168,4 +157,10 @@ void Graph::PrepareGraph(bool diagonalMoves)
     // Setting the starting node and the end node to something in the middle of the screen
     nodeStart = &m_nodes[(m_iHeight / 2) * m_iWidth + 1];
     nodeEnd = &m_nodes[(m_iHeight / 2) * m_iWidth + (m_iWidth - 2)];
+}
+
+Graph::~Graph()
+{
+    if (m_nodes != nullptr)
+        delete[] m_nodes;
 }

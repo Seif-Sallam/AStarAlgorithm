@@ -20,6 +20,8 @@ private:
 
 	void PrepareConnections();
 
+	bool isInBoundsOfImGui();
+
 private:
 	sf::Clock m_clock;
 	sf::RenderWindow *m_window;

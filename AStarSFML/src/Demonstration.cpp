@@ -39,7 +39,7 @@ void Demonstration::EventHandler()
 			m_window->close();
 		if (m_event->type == sf::Event::Resized)
 			m_view.setSize(sf::Vector2f(m_window->getSize()));
-		if (m_event->type == sf::Event::MouseButtonPressed && m_event->mouseButton.button == sf::Mouse::Left)
+		if (m_event->type == sf::Event::MouseButtonPressed && m_event->mouseButton.button == sf::Mouse::Left && !isInBoundsOfImGui())
 		{
 			sf::Vector2i mousePos = sf::Mouse::getPosition(*m_window) - sf::Vector2i(m_fOffset);
 			int x = mousePos.x / 32;
@@ -170,6 +170,8 @@ Demonstration::~Demonstration()
 	delete m_window;
 	delete m_event;
 	delete m_graph;
+	if (m_nodesShapes)
+		delete[] m_nodesShapes;
 }
 
 void Demonstration::PrepareConnections()
@@ -216,4 +218,9 @@ void Demonstration::PrepareConnections()
 				}
 			}
 		}
+}
+
+bool Demonstration::isInBoundsOfImGui()
+{
+	return ImGui::GetIO().WantCaptureMouse;
 }

@@ -12,7 +12,7 @@ add_library(
 
 target_link_libraries(imgui
     PRIVATE
-    GL
+    opengl32
     sfml-graphics
     sfml-window
     sfml-system

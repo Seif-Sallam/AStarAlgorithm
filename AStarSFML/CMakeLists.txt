@@ -18,7 +18,7 @@ target_include_directories(
 
 target_link_libraries(AStarSFML
     PRIVATE
-    GL
+    opengl32
     imgui
     sfml-graphics
     sfml-window
