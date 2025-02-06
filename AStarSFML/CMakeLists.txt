@@ -16,14 +16,28 @@ target_include_directories(
     ./headers/
 )
 
-target_link_libraries(AStarSFML
-    PRIVATE
-    opengl32
+set(LIBRARIES
     imgui
     sfml-graphics
     sfml-window
     sfml-system
     sfml-audio
+)
+
+set(OS_LIBRARIES
+    opengl32
+)
+
+if (UNIX)
+    set(OS_LIBRARIES
+        GL
+    )
+endif()
+
+target_link_libraries(AStarSFML
+    PRIVATE
+    ${LIBRARIES}
+    ${OS_LIBRARIES}
 )
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")

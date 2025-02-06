@@ -10,9 +10,19 @@ add_library(
     ${HEADERS}
 )
 
+set(OS_LIBRARIES
+    opengl32
+)
+
+if (UNIX)
+    set(OS_LIBRARIES
+        GL
+    )
+endif()
+
 target_link_libraries(imgui
     PRIVATE
-    opengl32
+    ${OS_LIBRARIES}
     sfml-graphics
     sfml-window
     sfml-system
