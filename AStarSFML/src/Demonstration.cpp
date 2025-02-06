@@ -6,7 +6,9 @@ Demonstration::Demonstration(uint32_t sWidth, uint32_t sHeight)
 	m_event = new sf::Event;
 	ImGui::SFML::Init(*m_window);
 	bool diagonal = true;
-	m_graph = new Graph(diagonal);
+	mGuiGraphSize[0] = 20;
+	mGuiGraphSize[1] = 20;
+	m_graph = new Graph(diagonal, mGuiGraphSize[0], mGuiGraphSize[1]);
 	m_fCellSize = {32.0f, 32.0f};
 	m_fTileSize = {20.0f, 20.0f};
 	m_fOffset = {16.0f, 16.0f};
@@ -15,6 +17,20 @@ Demonstration::Demonstration(uint32_t sWidth, uint32_t sHeight)
 
 	m_view.setSize(sf::Vector2f(m_window->getSize()));
 	m_view.setCenter(sf::Vector2f(m_view.getSize().x / 2.0f, m_view.getSize().y / 2.0f));
+
+	// Bounding Box stuff
+	m_boundingBox.setSize(sf::Vector2f(m_fCellSize.x * m_graph->GetWidth() - 2, m_fCellSize.y * m_graph->GetHeight()));
+	m_boundingBox.setFillColor(sf::Color::Transparent);
+	m_boundingBox.setOutlineColor(sf::Color::White);
+	m_boundingBox.setOutlineThickness(1.0f);
+	m_boundingBox.setPosition({m_fOffset.x - 3, m_fOffset.y - 3});
+
+
+	ImGuiIO& io = ImGui::GetIO();
+
+	io.Fonts->AddFontFromFileTTF(RSC_DIR"KnowingHow.ttf", 24.0f); // Change 24.0f to the desired size
+	ImGui::SFML::UpdateFontTexture();
+
 }
 
 void Demonstration::Run()
@@ -44,10 +60,10 @@ void Demonstration::EventHandler()
 			sf::Vector2i mousePos = sf::Mouse::getPosition(*m_window) - sf::Vector2i(m_fOffset);
 			int x = mousePos.x / 32;
 			int y = mousePos.y / 32;
-			if (x >= 0 && x < gWidth)
-				if (y >= 0 && y < gHeight)
+			if (x >= 0 && x < m_graph->GetWidth())
+				if (y >= 0 && y < m_graph->GetHeight())
 				{
-					int index = y * gWidth + x;
+					int index = y * m_graph->GetWidth() + x;
 					if (sf::Keyboard::isKeyPressed(sf::Keyboard::LControl))
 					{
 						if (m_graph->GetANode(x, y) != m_graph->nodeEnd)
@@ -75,11 +91,15 @@ void Demonstration::EventHandler()
 
 void Demonstration::ImGuiLayer()
 {
-	ImGui::Begin("Simulation Settings");
+	ImGui::Begin("Simulation Settings",  nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
+
+	ImGui::SetWindowSize(ImVec2(float((m_window->getSize().x - (m_fCellSize.x * m_graph->GetWidth())) - m_fOffset.x - 1), float(m_window->getSize().y)));
+	ImGui::SetWindowPos(ImVec2((m_fCellSize.x) * m_graph->GetWidth()+ m_fOffset.x, 0));
+	ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[1]); // Assuming you loaded a second font
 
 	ImGui::PushTextWrapPos(ImGui::GetWindowWidth());
 	ImGui::TextUnformatted("The green square represents the starting node, and the red square represents the end node."
-						   "To make the node inaccessable just click on it. To change the start node you just press Left CTRL + click on the node. To change the end node press Left SHIFT and click on the node"
+						   "\n* To make the node inaccessible just click on it.\n* To change the start node you just press Left CTRL + click on the node. To change the end node press Left SHIFT and click on the node"
 						   "Yellow nodes are the path nodes");
 	ImGui::Separator();
 	static bool isDiagonalEnabled = true;
@@ -91,14 +111,15 @@ void Demonstration::ImGuiLayer()
 		PrepareConnections();
 		lastValue = isDiagonalEnabled;
 	}
-	static int wh[2] = {16, 16};
-	ImGui::SliderInt2("Width and Height", wh, 10, 20);
+	ImGui::SliderInt2("Width and Height", mGuiGraphSize, 10, 20);
 	if (ImGui::Button("Change"))
 	{
-		m_graph->SetWidthAndHeight(wh[0], wh[1]);
+		m_graph->SetWidthAndHeight(mGuiGraphSize[0], mGuiGraphSize[1]);
+		m_boundingBox.setSize(sf::Vector2f(m_fCellSize.x * m_graph->GetWidth() - 2, m_fCellSize.y * m_graph->GetHeight()));
 		PrepareConnections();
 	}
 
+	ImGui::PopFont();
 	ImGui::End();
 }
 
@@ -106,11 +127,11 @@ void Demonstration::Update()
 {
 	sf::Time dt = m_clock.restart();
 	ImGui::SFML::Update(*m_window, dt);
-	for (int x = 0; x < gWidth; x++)
+	for (int x = 0; x < m_graph->GetWidth(); x++)
 	{
-		for (int y = 0; y < gHeight; y++)
+		for (int y = 0; y < m_graph->GetHeight(); y++)
 		{
-			int index = y * gWidth + x;
+			int index = y * m_graph->GetWidth() + x;
 			auto currentNode = m_graph->GetANode(x, y);
 			if (m_graph->nodeStart != currentNode && m_graph->nodeEnd != currentNode)
 			{
@@ -138,7 +159,7 @@ void Demonstration::Update()
 
 		while (p->parent != nullptr)
 		{
-			int index = p->y * gWidth + p->x;
+			int index = p->y * m_graph->GetWidth() + p->x;
 
 			if (p != m_graph->nodeEnd)
 				m_nodesShapes[index].setFillColor(sf::Color::Yellow);
@@ -154,12 +175,13 @@ void Demonstration::Draw()
 
 	m_window->draw(m_connections);
 
-	for (int x = 0; x < gWidth; x++)
-		for (int y = 0; y < gHeight; y++)
+	for (int x = 0; x < m_graph->GetWidth(); x++)
+		for (int y = 0; y < m_graph->GetHeight(); y++)
 		{
-			m_window->draw(m_nodesShapes[y * gWidth + x]);
+			m_window->draw(m_nodesShapes[y * m_graph->GetWidth() + x]);
 		}
 
+	m_window->draw(m_boundingBox);
 	ImGui::SFML::Render(*m_window);
 	m_window->display();
 }
@@ -176,25 +198,23 @@ Demonstration::~Demonstration()
 
 void Demonstration::PrepareConnections()
 {
-	gWidth = m_graph->GetWidth();
-	gHeight = m_graph->GetHeight();
 	if (m_nodesShapes != nullptr)
 	{
 		delete[] m_nodesShapes;
 	}
-	m_nodesShapes = new sf::RectangleShape[gWidth * gHeight];
+	m_nodesShapes = new sf::RectangleShape[m_graph->GetWidth() * m_graph->GetHeight()];
 	m_connections.clear();
-	for (int x = 0; x < gWidth; ++x)
-		for (int y = 0; y < gHeight; ++y)
+	for (int x = 0; x < m_graph->GetWidth(); ++x)
+		for (int y = 0; y < m_graph->GetHeight(); ++y)
 		{
-			int index = y * gWidth + x;
+			int index = y * m_graph->GetWidth() + x;
 			m_nodesShapes[index].setSize(m_fTileSize);
 			m_nodesShapes[index].setPosition(sf::Vector2f(x * m_fCellSize.x + m_fOffset.x, y * m_fCellSize.y + m_fOffset.y));
 		}
 
 	m_connections.setPrimitiveType(sf::Lines);
-	for (int x = 0; x < gWidth; x++)
-		for (int y = 0; y < gHeight; y++)
+	for (int x = 0; x < m_graph->GetWidth(); x++)
+		for (int y = 0; y < m_graph->GetHeight(); y++)
 		{
 			auto n = m_graph->GetANode(x, y);
 			if (n)

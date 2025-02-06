@@ -22,7 +22,7 @@ struct Node
 class Graph
 {
 public:
-    Graph(bool diagonalMoves = false);
+    Graph(bool diagonalMoves = false, int width = 20, int height = 20);
     void Solve_AStar();
     inline void SetWidthAndHeight(int width, int height)
     {

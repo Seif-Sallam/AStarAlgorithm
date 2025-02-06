@@ -1,11 +1,11 @@
 #include "Graph.h"
 
-Graph::Graph(bool diagonalMoves)
+Graph::Graph(bool diagonalMoves, int width, int height)
     : diagonalMoves(diagonalMoves)
 {
     //Those are felxible but for the sake of this demonstration
-    m_iWidth = 16;
-    m_iHeight = 16;
+    m_iWidth = width;
+    m_iHeight = height;
     m_nodes = nullptr;
     PrepareGraph(diagonalMoves);
 }

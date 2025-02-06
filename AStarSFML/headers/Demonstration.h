@@ -33,9 +33,10 @@ private:
 	sf::Vector2f m_fTileSize;
 	sf::Vector2f m_fCellSize;
 
-	int gHeight;
-	int gWidth;
+	int mGuiGraphSize[2];
 
 	sf::RectangleShape *m_nodesShapes;
 	sf::VertexArray m_connections;
+
+	sf::RectangleShape m_boundingBox;
 };
