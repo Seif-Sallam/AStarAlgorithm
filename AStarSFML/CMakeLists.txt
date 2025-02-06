@@ -48,8 +48,14 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 else()
     target_compile_definitions(AStarSFML
         PRIVATE
-        RSC_DIR=""
+        RSC_DIR="./rsc/"
     )
+
+    set_target_properties(AStarSFML PROPERTIES LINK_FLAGS "/ENTRY:mainCRTStartup")
 endif()
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/rsc/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/rsc/)
+if (NOT EXISTS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rsc/)
+    file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rsc/)
+endif()
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/rsc/ DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rsc/)
